@@ -1,0 +1,19 @@
+{
+  "name": "utsenatevoting",
+  "version": "1.0.0",
+  "description": "Voting Server for UT Austin Senate of College Councils General Assemblies",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Daksh Dua",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "helmet": "^3.23.3",
+    "jsonwebtoken": "^8.5.1"
+  },
+  "optionalDependencies": {}
+}
