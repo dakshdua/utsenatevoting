@@ -15,5 +15,7 @@
     "helmet": "^3.23.3",
     "jsonwebtoken": "^8.5.1"
   },
-  "optionalDependencies": {}
+  "engines": {
+    "node": "14.x"
+  }
 }
