@@ -76,9 +76,9 @@ app.get('/vote', (req, res) => {
 
 app.post('/adminAuth', basicAuth({users: {'admin': process.env.ADMIN_PASS}}), (req, res) => {
   console.log('Path: /adminAuth');
-  var token = jwt.sign({ user: 'admin' }, process.env.JWT_SECRET, {expiresIn: 300});
+  var token = jwt.sign({ user: 'admin' }, process.env.JWT_SECRET, {expiresIn: 180 * 60});
   res.cookie('token', token, {
-    maxAge: 300 * 1000,
+    maxAge:  180 * 60 * 1000,
     secure: true, // set to true if your using https
     httpOnly: true,
     sameSite: 'none',
@@ -100,9 +100,9 @@ function myAuthorizer(username, password) {
 
 app.post('/auth', basicAuth({authorizer: myAuthorizer}), (req, res) => {
   console.log('Path: /auth');
-  var token = jwt.sign({ user: req.auth.user }, process.env.JWT_SECRET, {expiresIn: 300});
+  var token = jwt.sign({ user: req.auth.user }, process.env.JWT_SECRET, {expiresIn: 180 * 60});
   res.cookie('token', token, {
-    maxAge: 300 * 1000,
+    maxAge: 180 * 60 * 1000,
     secure: true, // set to true if your using https
     httpOnly: true,
     sameSite: 'none',
