@@ -8,16 +8,21 @@ const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const { Client } = require('pg');
 
-const client = new Client({
+const pool = new Client({
   connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false
-  }
+  },
+  //max: 5
 });
 
-client.connect().catch(err =>
-  console.log('%s', err)
-);
+pool.on('error', (err, client) => {
+  console.log('Unexpected error on idle client: %s', err);
+});
+
+pool.query('SELECT NOW()', (err, res) => {
+  console.log(err, res);
+});
 
 /*client.query('DROP TABLE IF EXISTS questions; CREATE TABLE questions();', (err, res) => {
   if (err)  {
@@ -37,28 +42,54 @@ const corsOptions = {
   'optionsSuccessStatus': 204,
   'credentials': true,
   'allowedHeaders': 'Access-Control-Allow-Headers, Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization, DNT, Referer'
-}
+};
 
 app.use(helmet());
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(bodyParser.json());
-var councils = undefined;
+var oldcouncils = undefined;
 var agendaItems = [];
-var votes = [];
 var currentItem = undefined;
 
 app.get('/councils', (req, res) => {
   console.log('Path: /councils');
-  if(councils && Object.keys(councils)) {
-    res.send(JSON.stringify(Object.keys(councils).sort()));
-  } else {
-    res.sendStatus(409);
+  pool.query('SELECT name FROM councils'), (err, result) => {
+    console.log('hello');
+    if (err) {
+      console.log(err);
+      res.sendStatus(500);
+    } else if (result.rows.length === 0) {
+      console.log('no councils yet');
+      res.sendStatus(409);
+    } else {
+      var councils = [];
+      result.rows.forEach(function(council) {
+        councils.push(council.name);
+      });
+      console.log("sending %s", councils);
+      res.send(JSON.stringify(councils.sort()));
+    }
   }
 });
 
 app.get('/vote', (req, res) => {
   console.log('Path: GET /vote');
+  /* pool.query('SELECT item, type, active FROM agendaItems'), (err, result) => {
+    if (err) {
+      console.log(err);
+      res.sendStatus(500);
+    } else if (result.rows.length === 0) {
+      res.sendStatus(409);
+    } else {
+      var councils = [];
+      result.rows.forEach(function(agendaItem)) {
+        councils.push(council.name);
+      }
+      res.send(JSON.stringify(councils.sort()));
+    }
+  } */
+
   if (agendaItems) {
     var publicVoteInfo = new Object();
     agendaItems.forEach((agendaItem, i) => {
@@ -88,9 +119,9 @@ app.post('/adminAuth', basicAuth({users: {'admin': process.env.ADMIN_PASS}}), (r
 });
 
 function myAuthorizer(username, password) {
-  for (var council of Object.keys(councils)) {
+  for (var council of Object.keys(oldcouncils)) {
     const userMatches = basicAuth.safeCompare(username, council);
-    const passwordMatches = basicAuth.safeCompare(password, councils[council][0]);
+    const passwordMatches = basicAuth.safeCompare(password.toUpperCase(), oldcouncils[council][0]);
     if (userMatches && passwordMatches) {
       return true;
     }
@@ -126,28 +157,41 @@ function authenticateToken(req, res, next) {
     req.payload = decoded;
     console.log('Payload: %s', req.payload);
     next(); // pass the execution off to whatever request the client intended
-  })
+  });
 }
 
-app.use(authenticateToken);
+//app.use(authenticateToken);
 
 app.post('/adminCouncils', (req, res) => {
   console.log('Path: /adminCouncils');
-  if(req.payload.user !== 'admin') {
+  var test = false;
+  if(req.payload && req.payload.user === 'admin') {
     res.sendStatus(401);
   } else if (req.body) {
-    councils = req.body;
+    Object.keys(req.body).forEach(function (council) {
+      pool.query('INSERT INTO councils(name, password) VALUS($1::text, $2::varchar(6))', [council, req.body[council]]), (err, result) => {
+        if (err) {
+          console.log(err);
+          res.sendStatus(500);
+          return;
+        }
+        test = true;
+        console.log('working');
+      }
+    });
+
+    /* councils = req.body;
     for (var council of Object.keys(councils)) {
       var councilData = [];
       councilData.push(councils[council]);
       councilData.push(false);
       councils[council] = councilData;
     }
-    res.sendStatus(200);
+    res.sendStatus(200); */
   } else {
     res.sendStatus(400);
   }
-  console.log('%s', councils);
+  //console.log('%s', councils);
 });
 
 app.post('/agendaItem', (req, res) => {
@@ -160,8 +204,8 @@ app.post('/agendaItem', (req, res) => {
       councils[council][1] = false;
     }
     agendaItem.item = req.body.agendaItem;
-    agendaItem['Yes'] = 0;
-    agendaItem['No'] = 0;
+    agendaItem['Aye'] = 0;
+    agendaItem['Nay'] = 0;
     agendaItem['Abstain'] = 0;
     agendaItems.push(agendaItem);
     currentItem = agendaItem;
@@ -177,7 +221,7 @@ app.post('/vote', (req, res) => {
   console.log('%s', req.body);
   if (councils && req.body && req.payload.user && councils[req.payload.user]) {
     if (req.body.agendaItem && req.body.vote && req.body.agendaItem === currentItem.item) {
-      if(req.body.vote === 'Yes' || req.body.vote === 'No' || req.body.vote === 'Abstain' && !councils[req.payload.user][1]) {
+      if(req.body.vote === 'Aye' || req.body.vote === 'Nay' || req.body.vote === 'Abstain' && !councils[req.payload.user][1]) {
           currentItem[req.body.vote]++;
           currentItem[req.payload.user] = req.body.vote;
           councils[req.payload.user][1] = true;
