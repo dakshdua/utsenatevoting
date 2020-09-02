@@ -149,7 +149,7 @@ function myAuthorizer(username, password) {
       }
     })
     .catch(err => {
-      console.log(error);
+      console.log(err);
       return false;
     });
 }
