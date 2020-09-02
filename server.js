@@ -165,7 +165,7 @@ function authenticateToken(req, res, next) {
 app.post('/adminCouncils', (req, res) => {
   console.log('Path: /adminCouncils');
   var test = false;
-  if(req.payload && req.payload.user === 'admin') {
+  if(req.payload && req.payload.user !== 'admin') {
     res.sendStatus(401);
   } else if (req.body) {
     Object.keys(req.body).forEach(function (council) {
