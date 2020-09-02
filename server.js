@@ -256,38 +256,31 @@ app.post('/vote', (req, res) => {
                 id AS item_id,
                 active AS item_active
               FROM agenda_items
-              WHERE item = $2::text`)
-        .then(data => {
-          res.sendStatus(200);
+              WHERE item = $2::text`,
+          [req.payload.user, req.body.agendaItem])
+        .then([council_data, item_data] => {
+          if (!item_data.item_active || council_data.length === 0) {
+            res.sendStatus(401);
+          } else if (item_data.length === 0) {
+            res.sendStatus(401);
+          } else {
+            db.none('INSERT INTO votes(council_id, item_id, value) VALUES($1::int, $2::int, $3::vote_value)', [council_data[0].council_id, item_data[0].item_id, req.body.vote])
+              .then(data => {
+                res.sendStatus(200);
+              })
+              .catch(err => {
+                console.log(error);
+                res.sendStatus(500);
+              });
+          }
         })
         .catch(err => {
           console.log(error);
           res.sendStatus(500);
         });
-    db.none('INSERT INTO votes(item, type) VALUES($1::text, $2::item_type)', [req.body.agendaItem, req.body.type])
-        .then(data => {
-        res.sendStatus(200);
-      })
-      .catch(err => {
-        console.log(error);
-        res.sendStatus(500);
-      });
   } else {
     res.sendStatus(400);
   }
-
-  if (req.body && req.payload.user) {
-    if (req.body.agendaItem && req.body.vote && req.body.agendaItem === currentItem.item) {
-      if(req.body.vote === 'Aye' || req.body.vote === 'Nay' || req.body.vote === 'Abstain' && !councils[req.payload.user][1]) {
-          currentItem[req.body.vote]++;
-          currentItem[req.payload.user] = req.body.vote;
-          councils[req.payload.user][1] = true;
-          res.sendStatus(200);
-          return;
-      }
-    }
-  }
-  res.sendStatus(400);
 });
 
 let port = process.env.PORT;
