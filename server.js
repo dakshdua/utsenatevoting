@@ -283,17 +283,17 @@ app.post('/vote', (req, res) => {
 
               SELECT
                 id AS item_id,
-                active AS item_active
+                active
               FROM agenda_items
               WHERE item = $2`,
           [req.payload.user, req.body.agendaItem])
       .then(data => {
         console.log(data);
         const [council_data, item_data] = data;
-        if (!item_data.item_active || council_data.length === 0) {
-          res.sendStatus(401);
-        } else if (item_data.length === 0) {
+        if (item_data.length === 0) {
           res.sendStatus(409);
+        } else if (!item_data[0].active || council_data.length === 0) {
+          res.sendStatus(401);
         } else {
           db.none('INSERT INTO votes(council_id, item_id, value) VALUES($1, $2, $3)', [council_data[0].council_id, item_data[0].item_id, req.body.vote])
             .then(data => {
