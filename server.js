@@ -193,8 +193,7 @@ app.use(authenticateToken);
 
 app.post('/adminCouncils', (req, res) => {
   console.log('Path: /adminCouncils');
-  var test = false;
-  if(!req.payload || req.payload.user !== 'admin') {
+  if(req.payload.user !== 'admin') {
     res.sendStatus(401);
   } else if (req.body) {
     const cs = new pgp.helpers.ColumnSet(['name', 'password'], {table: 'councils'});
@@ -209,21 +208,16 @@ app.post('/adminCouncils', (req, res) => {
           res.sendStatus(500);
         }); */
     });
-    try {
-      const query = pgp.helpers.insert(req.body, cs);
-      db.multi('TRUNCATE TABLE votes; TRUNCATE TABLE councils CASCADE; TRUNCATE TABLE agenda_items CASCADE;' + query)
-        .then(data => {
-          console.log(data);
-          res.sendStatus(200);
-        })
-        .catch(err => {
-          console.log(err);
-          res.sendStatus(500);
-        });
-    } catch (err) {
-      console.log(err);
-      res.sendStatus(400);
-    }
+    const query = pgp.helpers.insert(req.body, cs);
+    db.multi('TRUNCATE TABLE votes; TRUNCATE TABLE councils CASCADE; TRUNCATE TABLE agenda_items CASCADE;' + query)
+      .then(data => {
+        console.log(data);
+        res.sendStatus(200);
+      })
+      .catch(err => {
+        console.log(err);
+        res.sendStatus(500);
+      });
   } else {
     res.sendStatus(400);
   }
