@@ -133,7 +133,7 @@ app.post('/adminAuth', basicAuth({users: {'admin': process.env.ADMIN_PASS}}), (r
   console.log('Auth: %s', req.header('Authorization'));
 });
 
-function myAuthorizer(username, password) {
+function myAuthorizer(username, password, cb) {
   db.oneOrNone('SELECT password FROM councils WHERE name=$1', username)
     .then(data => {
       console.log(data);
@@ -141,7 +141,7 @@ function myAuthorizer(username, password) {
         bcrypt.compare(password.toUpperCase(), data.password)
           .then(result => {
             console.log(result);
-            cb(null, result);
+            cb(null, result)
           })
           .catch(err => {
             console.log(err);
@@ -211,7 +211,6 @@ app.post('/adminCouncils', (req, res) => {
     const query = pgp.helpers.insert(req.body, cs);
     db.multi('TRUNCATE TABLE votes; TRUNCATE TABLE councils CASCADE; TRUNCATE TABLE agenda_items CASCADE;' + query)
       .then(data => {
-        console.log(data);
         res.sendStatus(200);
       })
       .catch(err => {
