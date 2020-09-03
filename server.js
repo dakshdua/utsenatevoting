@@ -147,7 +147,8 @@ function myAuthorizer(username, password) {
             return false;
           });
         */
-        return basicAuth.safeCompare(data[0].password, password);
+        return basicAuth.safeCompare(data[0].password.toUpperCase(), password.toUpperCase());
+        console.log(data[0].password.toUpperCase(), password.toUpperCase());
       } else {
         return false;
       }
