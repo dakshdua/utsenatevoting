@@ -133,7 +133,7 @@ app.post('/adminAuth', basicAuth({users: {'admin': process.env.ADMIN_PASS}}), (r
   console.log('Auth: %s', req.header('Authorization'));
 });
 
-function myAuthorizer(username, password, cb) {
+function myAuthorizer(username, password) {
   db.oneOrNone('SELECT password FROM councils WHERE name=$1', username)
     .then(data => {
       console.log(data);
@@ -145,13 +145,20 @@ function myAuthorizer(username, password, cb) {
           .catch(err => {
             cb(err, false);
           });
+<<<<<<< HEAD
+=======
+        */
+        console.log('%s %d %s %d', data.password, data.password.length, password.toUpperCase(), password.length);
+        console.log(data.password.toUpperCase() === password.toUpperCase());
+        return data.password.toUpperCase() === password.toUpperCase();
+>>>>>>> parent of 8edfdd2... aync auth with callback
       } else {
-        cb(null, false);
+        return false;
       }
     })
     .catch(err => {
       console.log(err);
-      cb(err, false);
+      return false;
     });
 }
 
