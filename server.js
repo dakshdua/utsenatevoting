@@ -99,14 +99,19 @@ app.get('/vote', (req, res) => {
           agendaItem.item = item.item;
           agendaItem.type = item.type;
           agendaItem.active = item.active;
+          agendaItem.councils = new Object();
           if (agendaItem.active) {
             agendaItem.result = 'In Progress';
             item = false;
+            while (currentVote < votes_data.length && votes_data[currentVote].item === item.item) {
+              var vote = votes_data[currentVote];
+              agendaItem.councils[vote.name] = 'Voted';
+              currentVote++;
+            }
           } else {
             agendaItem.Aye = 0;
             agendaItem.Nay = 0;
             agendaItem.Abstain = 0;
-            agendaItem.councils = new Object();
             while (currentVote < votes_data.length && votes_data[currentVote].item === item.item) {
               var vote = votes_data[currentVote];
               agendaItem[vote.value]++;
