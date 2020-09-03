@@ -140,12 +140,15 @@ function myAuthorizer(username, password) {
       if (data) {
         bcrypt.compare(password, data.password)
           .then(result => {
+            console.log(result);
             cb(null, result);
           })
           .catch(err => {
+            console.log(err);
             cb(err, false);
           });
       } else {
+        console.log('no data');
         cb(null, false);
       }
     })
