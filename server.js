@@ -68,7 +68,7 @@ app.get('/vote', (req, res) => {
               item, type, active
             FROM
               agenda_items
-            ORDER BY agenda_items.id;
+            ORDER BY id;
 
             SELECT
               name
@@ -78,7 +78,7 @@ app.get('/vote', (req, res) => {
             SELECT
               votes.value AS value,
               councils.name AS name,
-              agenda_items.item AS item,
+              agenda_items.item AS item
             FROM
               votes
             INNER JOIN councils ON councils.id = votes.council_id
