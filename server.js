@@ -121,12 +121,12 @@ app.get('/vote', (req, res) => {
             currentItem++;
             item = agenda_items_data[currentItem];
             if (agendaItem.type === 'Bill') {
-              agendaItem.result = agendaItem.Yes > 2 * (agendaItem.No + agendaItem.Abstain);
+              agendaItem.result = agendaItem.Yes > 2 * (agendaItem.No + agendaItem.Abstain) ? 'Passed' : 'Failed';
             } else {
-              agendaItem.result = agendaItem.Yes > (agendaItem.No + agendaItem.Abstain);
+              agendaItem.result = agendaItem.Yes > (agendaItem.No + agendaItem.Abstain)  ? 'Passed' : 'Failed';
             }
-            agendaItems.push(agendaItem);
           }
+          agendaItems.push(agendaItem);
         }
         var tableInfo = new Object();
         tableInfo.agendaItems = agendaItems;
@@ -243,7 +243,7 @@ app.post('/agendaItem', (req, res) => {
   if(req.payload.user !== 'admin') {
     res.sendStatus(401);
   } else if (req.body && req.body.agendaItem && req.body.type) {
-    db.none('INSERT INTO agenda_items(item, type) VALUES($1, $2)', [req.body.agendaItem, req.body.type])
+    db.multi('UPDATE agenda_items SET active = FALSE WHERE id IN (SELECT MAX(id) FROM agenda_items); INSERT INTO agenda_items(item, type) VALUES($1, $2)', [req.body.agendaItem, req.body.type])
       .then(data => {
         res.sendStatus(200);
       })
