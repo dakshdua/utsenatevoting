@@ -69,7 +69,7 @@ app.get('/vote', (req, res) => {
             councils.name AS name,
             agenda_items.item AS item,
             agenda_items.type AS type,
-            agenda_items.active AS active
+            agenda_items.active AS active,
             agenda_items.council_count AS council_count
           FROM
             votes
