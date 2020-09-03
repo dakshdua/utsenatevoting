@@ -121,9 +121,9 @@ app.get('/vote', (req, res) => {
             currentItem++;
             item = agenda_items_data[currentItem];
             if (agendaItem.type === 'Bill') {
-              agendaItem.result = agendaItem.Yes > 2 * (agendaItem.No + agendaItem.Abstain) ? 'Passed' : 'Failed';
+              agendaItem.result = agendaItem.Aye > 2 * (agendaItem.Nay + agendaItem.Abstain) ? 'Passed' : 'Failed';
             } else {
-              agendaItem.result = agendaItem.Yes > (agendaItem.No + agendaItem.Abstain)  ? 'Passed' : 'Failed';
+              agendaItem.result = agendaItem.Aye > (agendaItem.Nay + agendaItem.Abstain)  ? 'Passed' : 'Failed';
             }
           }
           agendaItems.push(agendaItem);
