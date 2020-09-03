@@ -64,45 +64,59 @@ app.get('/councils', (req, res) => {
 
 app.get('/vote', (req, res) => {
   console.log('Path: GET /vote');
-  db.any(`SELECT
-            votes.value AS value,
-            councils.name AS name,
-            agenda_items.item AS item,
-            agenda_items.type AS type,
-            agenda_items.active AS active,
-            agenda_items.council_count AS council_count
-          FROM
-            votes
-          INNER JOIN councils ON councils.id = votes.council_id
-          INNER JOIN agenda_items ON agenda_items.id = votes.item_id
-          ORDER BY votes.item_id`)
+  db.multi(`SELECT
+              item, type, active
+            FROM
+              agenda_items
+            ORDER BY agenda_items.id;
+
+            SELECT
+              name
+            FROM
+              councils;
+
+            SELECT
+              votes.value AS value,
+              councils.name AS name,
+              agenda_items.item AS item,
+            FROM
+              votes
+            INNER JOIN councils ON councils.id = votes.council_id
+            INNER JOIN agenda_items ON agenda_items.id = votes.item_id
+            ORDER BY agenda_items.id`)
     .then(data => {
       console.log(data);
-      /* if (data.length === 0) {
+      const [agenda_items_data, councils_data, votes_data] = data;
+      if (councils_data.length === 0) {
         res.sendStatus(409);
-      } else { */
+      } else if (agenda_items_data.length === 0) {
+        res.sendStatus(200);
+      } else {
         var agendaItems = [];
-        var currentItem = data[0].item;
+        var currentItem = 0;
         var currentVote = 0;
-        while (currentItem) {
+        var item = agenda_items_data[currentItem];
+        while (item) {
           var agendaItem = new Object();
-          agendaItem.item = currentItem;
-          agendaItem.Aye = 0;
-          agendaItem.Nay = 0;
-          agendaItem.Abstain = 0;
-          agendaItem.councils = new Object();
-          agendaItem.type = data[currentVote].type;
-          agendaItem.active = data[currentVote].active;
+          agendaItem.item = item.item;
+          agendaItem.type = item.type;
+          agendaItem.active = item.active;
           if (agendaItem.active) {
             agendaItem.result = 'In Progress';
-            currentItem = false;
+            item = false;
           } else {
-            while (currentVote < data.length && data[currentVote].item === currentItem) {
-              agendaItem[data[currentVote].value]++;
-              agendaItem.councils[data[currentVote].name] = data[currentVote].value;
+            agendaItem.Aye = 0;
+            agendaItem.Nay = 0;
+            agendaItem.Abstain = 0;
+            agendaItem.councils = new Object();
+            while (currentVote < votes_data.length && votes_data[currentVote].item === item.item) {
+              var vote = votes_data[currentVote];
+              agendaItem[vote.value]++;
+              agendaItem.councils[vote.name] = vote.value;
               currentVote++;
             }
-            currentItem = data[currentVote] && data[currentVote].item;
+            currentItem++;
+            item = agenda_items_data[currentItem];
             if (agendaItem.type === 'Bill') {
               agendaItem.result = agendaItem.Yes > 2 * (agendaItem.No + agendaItem.Abstain);
             } else {
@@ -110,9 +124,9 @@ app.get('/vote', (req, res) => {
             }
             agendaItems.push(agendaItem);
           }
-          res.send(JSON.stringify(agendaItems));
         }
-      //}
+        res.send(JSON.stringify(agendaItems));
+      }
     })
     .catch(err => {
       console.log(err);
@@ -200,13 +214,6 @@ app.post('/adminCouncils', (req, res) => {
     console.log(req.body);
     req.body.forEach(function(council) {
       council.password = bcrypt.hashSync(council.password.toUpperCase(), 3);
-        /* .then(hash => {
-          council.password = hash;
-        })
-        .catch(err => {
-          console.log(err);
-          res.sendStatus(500);
-        }); */
     });
     const query = pgp.helpers.insert(req.body, cs);
     db.multi('TRUNCATE TABLE votes; TRUNCATE TABLE councils CASCADE; TRUNCATE TABLE agenda_items CASCADE;' + query)
@@ -227,7 +234,7 @@ app.post('/agendaItem', (req, res) => {
   if(req.payload.user !== 'admin') {
     res.sendStatus(401);
   } else if (req.body && req.body.agendaItem && req.body.type) {
-    db.none('INSERT INTO agenda_items(item, type) VALUES($1::text, $2::item_type)', [req.body.agendaItem, req.body.type])
+    db.none('INSERT INTO agenda_items(item, type) VALUES($1, $2)', [req.body.agendaItem, req.body.type])
       .then(data => {
         res.sendStatus(200);
       })
@@ -240,6 +247,22 @@ app.post('/agendaItem', (req, res) => {
   }
 });
 
+app.post('/end', (req, res) => {
+  console.log('Path: /agendaItem');
+  if(req.payload.user !== 'admin') {
+    res.sendStatus(401);
+  } else {
+    db.none('UPDATE agenda_items SET council_count=current_council_count, active=FALSE WHERE id IN (SELECT MAX(id) FROM agenda_items)')
+      .then(data => {
+        res.sendStatus(200);
+      })
+      .catch(err => {
+        console.log(err);
+        res.sendStatus(500);
+      });
+  }
+});
+
 app.post('/vote', (req, res) => {
   console.log('Path: POST /vote');
   console.log('%s', req.body);
@@ -247,13 +270,13 @@ app.post('/vote', (req, res) => {
     db.multi(`SELECT
                 id  AS council_id
               FROM councils
-              WHERE name = $1::text;
+              WHERE name = $1;
 
               SELECT
                 id AS item_id,
                 active AS item_active
               FROM agenda_items
-              WHERE item = $2::text`,
+              WHERE item = $2`,
           [req.payload.user, req.body.agendaItem])
       .then((council_data, item_data) => {
         if (!item_data.item_active || council_data.length === 0) {
@@ -261,7 +284,7 @@ app.post('/vote', (req, res) => {
         } else if (item_data.length === 0) {
           res.sendStatus(409);
         } else {
-          db.none('INSERT INTO votes(council_id, item_id, value) VALUES($1::int, $2::int, $3::vote_value)', [council_data[0].council_id, item_data[0].item_id, req.body.vote])
+          db.none('INSERT INTO votes(council_id, item_id, value) VALUES($1, $2, $3)', [council_data[0].council_id, item_data[0].item_id, req.body.vote])
             .then(data => {
               res.sendStatus(200);
             })
