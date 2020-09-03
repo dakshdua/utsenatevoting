@@ -178,8 +178,8 @@ function authenticateToken(req, res, next) {
     console.log('no token');
   }
 	jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-		if (err instanceof jwt.JsonWebTokenerr) {
-			// if the err thrown is because the JWT is unauthorized, return a 401 err
+		if (err instanceof jwt.JsonWebTokenError) {
+			// if the error thrown is because the JWT is unauthorized, return a 401 error
 			return res && res.sendStatus(401);
 		} else if (err) {
       return res && res.sendStatus(400);
