@@ -23,7 +23,7 @@ db.any('SELECT NOW()')
     console.log(data);
   })
   .catch(err => {
-    console.log(error);
+    console.log(err);
   });
 
 const corsOptions = {
@@ -57,7 +57,7 @@ app.get('/councils', (req, res) => {
       }
     })
     .catch(err => {
-      console.log(error);
+      console.log(err);
       res.sendStatus(500);
     });
 });
@@ -143,12 +143,12 @@ function myAuthorizer(username, password) {
             return result;
           })
           .catch(err => {
-            console.log(error);
+            console.log(err);
             return false;
           });
         */
         console.log(data.password.toUpperCase(), password.toUpperCase());
-        return basicAuth.safeCompare(data.password.toUpperCase(), password.toUpperCase());
+        return data.password.toUpperCase() === password.toUpperCase();
       } else {
         return false;
       }
@@ -178,8 +178,8 @@ function authenticateToken(req, res, next) {
     console.log('no token');
   }
 	jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-		if (err instanceof jwt.JsonWebTokenError) {
-			// if the error thrown is because the JWT is unauthorized, return a 401 error
+		if (err instanceof jwt.JsonWebTokenerr) {
+			// if the err thrown is because the JWT is unauthorized, return a 401 err
 			return res && res.sendStatus(401);
 		} else if (err) {
       return res && res.sendStatus(400);
@@ -220,11 +220,11 @@ app.post('/adminCouncils', (req, res) => {
           res.sendStatus(200);
         })
         .catch(err => {
-          console.log(error);
+          console.log(err);
           res.sendStatus(500);
         });
-    } catch (error) {
-      console.log(error);
+    } catch (err) {
+      console.log(err);
       res.sendStatus(400);
     }
   } else {
@@ -242,7 +242,7 @@ app.post('/agendaItem', (req, res) => {
         res.sendStatus(200);
       })
       .catch(err => {
-        console.log(error);
+        console.log(err);
         res.sendStatus(500);
       });
   } else {
@@ -276,13 +276,13 @@ app.post('/vote', (req, res) => {
               res.sendStatus(200);
             })
             .catch(err => {
-              console.log(error);
+              console.log(err);
               res.sendStatus(500);
             });
         }
       })
       .catch(err => {
-        console.log(error);
+        console.log(err);
         res.sendStatus(500);
       });
   } else {
