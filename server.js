@@ -86,9 +86,11 @@ app.get('/vote', (req, res) => {
         var currentVote = 0;
         while (currentItem) {
           var agendaItem = new Object();
+          agendaItem.item = currentItem;
           agendaItem.Aye = 0;
           agendaItem.Nay = 0;
           agendaItem.Abstain = 0;
+          agendaItem.councils = new Object();
           agendaItem.type = data[currentVote].type;
           agendaItem.active = data[currentVote].active;
           if (agendaItem.active) {
@@ -97,7 +99,7 @@ app.get('/vote', (req, res) => {
           } else {
             while (currentVote < data.length && data[currentVote].item === currentItem) {
               agendaItem[data[currentVote].value]++;
-              agendaItem[data[currentVote].name] = data[currentVote].value;
+              agendaItem.councils[data[currentVote].name] = data[currentVote].value;
               currentVote++;
             }
             currentItem = data[currentVote] && data[currentVote].item;
