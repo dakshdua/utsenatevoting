@@ -134,7 +134,7 @@ app.post('/adminAuth', basicAuth({users: {'admin': process.env.ADMIN_PASS}}), (r
 });
 
 function myAuthorizer(username, password) {
-  db.oneOrNone('SELECT password FROM councils WHERE name = $1::text', username)
+  db.oneOrNone('SELECT password FROM councils WHERE name=$1', username)
     .then(data => {
       console.log(data);
       if (data) {
@@ -215,7 +215,8 @@ app.post('/adminCouncils', (req, res) => {
     try {
       const query = pgp.helpers.insert(req.body, cs);
       db.multi('TRUNCATE TABLE votes; TRUNCATE TABLE councils CASCADE; TRUNCATE TABLE agenda_items CASCADE;' + query)
-        .then((a, b, c, data) => {
+        .then(data => {
+          console.log(data);
           res.sendStatus(200);
         })
         .catch(err => {
@@ -268,7 +269,7 @@ app.post('/vote', (req, res) => {
         if (!item_data.item_active || council_data.length === 0) {
           res.sendStatus(401);
         } else if (item_data.length === 0) {
-          res.sendStatus(401);
+          res.sendStatus(409);
         } else {
           db.none('INSERT INTO votes(council_id, item_id, value) VALUES($1::int, $2::int, $3::vote_value)', [council_data[0].council_id, item_data[0].item_id, req.body.vote])
             .then(data => {
