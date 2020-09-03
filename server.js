@@ -125,7 +125,7 @@ app.get('/vote', (req, res) => {
         }
         var tableInfo = new Object();
         tableInfo.agendaItems = agendaItems;
-        for(int i = 0; i < councils_data.length; i++) {
+        for(var i = 0; i < councils_data.length; i++) {
           councils_data[i] = councils_data[i].name;
         }
         tableInfo.councils = councils_data;
