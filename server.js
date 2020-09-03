@@ -160,7 +160,7 @@ function myAuthorizer(username, password) {
     });
 }
 
-app.post('/auth', /* basicAuth({authorizer: myAuthorizer}), */ (req, res) => {
+app.post('/auth', basicAuth({authorizer: myAuthorizer, authorizeAsync: true}), */ (req, res) => {
   console.log('Path: /auth');
   var token = jwt.sign({ user: req.auth.user }, process.env.JWT_SECRET, {expiresIn: 180 * 60});
   res.cookie('token', token, {
