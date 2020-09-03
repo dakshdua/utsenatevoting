@@ -87,10 +87,8 @@ app.get('/vote', (req, res) => {
     .then(data => {
       console.log(data);
       const [agenda_items_data, councils_data, votes_data] = data;
-      if (councils_data.length === 0) {
+      if (councils_data.length === 0 || agenda_items_data.length === 0) {
         res.sendStatus(409);
-      } else if (agenda_items_data.length === 0) {
-        res.sendStatus(200);
       } else {
         var agendaItems = [];
         var currentItem = 0;
@@ -125,7 +123,10 @@ app.get('/vote', (req, res) => {
             agendaItems.push(agendaItem);
           }
         }
-        res.send(JSON.stringify(agendaItems));
+        var tableInfo = new Object();
+        tableInfo.agendaItems = agendaItems;
+        tableInfo.councils = councils_data;
+        res.send(JSON.stringify(tableInfo));
       }
     })
     .catch(err => {
