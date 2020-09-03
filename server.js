@@ -210,8 +210,8 @@ app.post('/adminCouncils', (req, res) => {
     });
     try {
       const query = pgp.helpers.insert(req.body, cs);
-      db.any(query)
-          .then(data => {
+      db.multi('TRUNCATE TABLE votes; TRUNCATE TABLE councils CASCADE; TRUNCATE TABLE agenda_items CASCADE;' + query)
+        .then((a, b, c, data) => {
           res.sendStatus(200);
         })
         .catch(err => {
