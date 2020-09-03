@@ -147,7 +147,7 @@ function myAuthorizer(username, password) {
             return false;
           });
         */
-        console.log(data.password.toUpperCase().replace(/\s+/g, ''), password.toUpperCase());
+        console.log('%s %d %s %d', data.password, data.password.length, password.toUpperCase(), password.length);
         return data.password.toUpperCase() === password.toUpperCase();
       } else {
         return false;
