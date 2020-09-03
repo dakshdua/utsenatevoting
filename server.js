@@ -138,16 +138,13 @@ function myAuthorizer(username, password, cb) {
     .then(data => {
       console.log(data);
       if (data) {
-        /* bcrypt.compare(password, data.password)
+        bcrypt.compare(password, data.password)
           .then(result => {
-            return result;
+            return cb(null, result);
           })
           .catch(err => {
-            console.log(err);
-            return false;
+            cb(err, false);
           });
-        */
-        cb(null, data.password.toUpperCase() === password.toUpperCase());
       } else {
         cb(null, false);
       }
@@ -200,32 +197,30 @@ app.post('/adminCouncils', (req, res) => {
     const cs = new pgp.helpers.ColumnSet(['name', 'password'], {table: 'councils'});
     console.log(req.body);
     req.body.forEach(function(council) {
-      /* bcrypt.hash(council.password, 3)
+      bcrypt.hash(council.password, 3)
         .then(hash => {
           council.password = hash;
+          try {
+            const query = pgp.helpers.insert(req.body, cs);
+            db.multi('TRUNCATE TABLE votes; TRUNCATE TABLE councils CASCADE; TRUNCATE TABLE agenda_items CASCADE;' + query)
+              .then(data => {
+                console.log(data);
+                res.sendStatus(200);
+              })
+              .catch(err => {
+                console.log(err);
+                res.sendStatus(500);
+              });
+          } catch (err) {
+            console.log(err);
+            res.sendStatus(400);
+          }
         })
         .catch(err => {
           console.log(err);
           res.sendStatus(500);
-          return;
         });
-        */
     });
-    try {
-      const query = pgp.helpers.insert(req.body, cs);
-      db.multi('TRUNCATE TABLE votes; TRUNCATE TABLE councils CASCADE; TRUNCATE TABLE agenda_items CASCADE;' + query)
-        .then(data => {
-          console.log(data);
-          res.sendStatus(200);
-        })
-        .catch(err => {
-          console.log(err);
-          res.sendStatus(500);
-        });
-    } catch (err) {
-      console.log(err);
-      res.sendStatus(400);
-    }
   } else {
     res.sendStatus(400);
   }
