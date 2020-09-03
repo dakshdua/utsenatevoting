@@ -78,9 +78,9 @@ app.get('/vote', (req, res) => {
           ORDER BY votes.item_id`)
     .then(data => {
       console.log(data);
-      if (data.length === 0) {
+      /* if (data.length === 0) {
         res.sendStatus(409);
-      } else {
+      } else { */
         var agendaItems = [];
         var currentItem = data[0].item;
         var currentVote = 0;
@@ -112,7 +112,7 @@ app.get('/vote', (req, res) => {
           }
           res.send(JSON.stringify(agendaItems));
         }
-      }
+      //}
     })
     .catch(err => {
       console.log(err);
@@ -145,13 +145,6 @@ function myAuthorizer(username, password) {
           .catch(err => {
             cb(err, false);
           });
-<<<<<<< HEAD
-=======
-        */
-        console.log('%s %d %s %d', data.password, data.password.length, password.toUpperCase(), password.length);
-        console.log(data.password.toUpperCase() === password.toUpperCase());
-        return data.password.toUpperCase() === password.toUpperCase();
->>>>>>> parent of 8edfdd2... aync auth with callback
       } else {
         return false;
       }
