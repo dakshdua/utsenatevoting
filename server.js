@@ -137,8 +137,8 @@ function myAuthorizer(username, password) {
   db.oneOrNone('SELECT password FROM councils WHERE name = $1::text', username)
     .then(data => {
       console.log(data);
-      if (data[0]) {
-        /* bcrypt.compare(password, data[0].password)
+      if (data) {
+        /* bcrypt.compare(password, data.password)
           .then(result => {
             return result;
           })
@@ -147,8 +147,8 @@ function myAuthorizer(username, password) {
             return false;
           });
         */
-        return basicAuth.safeCompare(data[0].password.toUpperCase(), password.toUpperCase());
-        console.log(data[0].password.toUpperCase(), password.toUpperCase());
+        return basicAuth.safeCompare(data.password.toUpperCase(), password.toUpperCase());
+        console.log(data.password.toUpperCase(), password.toUpperCase());
       } else {
         return false;
       }
