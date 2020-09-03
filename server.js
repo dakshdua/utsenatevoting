@@ -115,7 +115,7 @@ app.get('/vote', (req, res) => {
       }
     })
     .catch(err => {
-      console.log(error);
+      console.log(err);
       res.sendStatus(500);
     });
 });
