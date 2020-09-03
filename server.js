@@ -137,7 +137,7 @@ function myAuthorizer(username, password) {
   db.oneOrNone('SELECT password FROM councils WHERE name = $1::text', username)
     .then(data => {
       console.log(data);
-      if (data) {
+      if (data[0]) {
         bcrypt.compare(password, data[0].password)
           .then(result => {
             return result;
