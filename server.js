@@ -287,7 +287,9 @@ app.post('/vote', (req, res) => {
               FROM agenda_items
               WHERE item = $2`,
           [req.payload.user, req.body.agendaItem])
-      .then((council_data, item_data) => {
+      .then(data => {
+        console.log(data);
+        const [council_data, item_data] = data;
         if (!item_data.item_active || council_data.length === 0) {
           res.sendStatus(401);
         } else if (item_data.length === 0) {
@@ -308,6 +310,7 @@ app.post('/vote', (req, res) => {
         res.sendStatus(500);
       });
   } else {
+    console.log(req.body);
     res.sendStatus(400);
   }
 });
