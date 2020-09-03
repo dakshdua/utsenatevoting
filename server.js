@@ -138,7 +138,7 @@ function myAuthorizer(username, password) {
     .then(data => {
       console.log(data);
       if (data[0]) {
-        bcrypt.compare(password, data[0].password)
+        /* bcrypt.compare(password, data[0].password)
           .then(result => {
             return result;
           })
@@ -146,6 +146,8 @@ function myAuthorizer(username, password) {
             console.log(error);
             return false;
           });
+        */
+        return basicAuth.safeCompare(data[0].password, password);
       } else {
         return false;
       }
@@ -198,7 +200,7 @@ app.post('/adminCouncils', (req, res) => {
     const cs = new pgp.helpers.ColumnSet(['name', 'password'], {table: 'councils'});
     console.log(req.body);
     req.body.forEach(function(council) {
-      bcrypt.hash(council.password, 3)
+      /* bcrypt.hash(council.password, 3)
         .then(hash => {
           council.password = hash;
         })
@@ -207,6 +209,7 @@ app.post('/adminCouncils', (req, res) => {
           res.sendStatus(500);
           return;
         });
+        */
     });
     try {
       const query = pgp.helpers.insert(req.body, cs);
