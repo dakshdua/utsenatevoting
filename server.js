@@ -140,18 +140,18 @@ function myAuthorizer(username, password) {
       if (data) {
         bcrypt.compare(password, data.password)
           .then(result => {
-            return cb(null, result);
+            cb(null, result);
           })
           .catch(err => {
             cb(err, false);
           });
       } else {
-        return false;
+        cb(null, false);
       }
     })
     .catch(err => {
       console.log(err);
-      return false;
+      cb(err, null);
     });
 }
 
@@ -197,7 +197,7 @@ app.post('/adminCouncils', (req, res) => {
     const cs = new pgp.helpers.ColumnSet(['name', 'password'], {table: 'councils'});
     console.log(req.body);
     req.body.forEach(function(council) {
-      bcrypt.hashSync(council.password, 3);
+      council.password = bcrypt.hashSync(council.password, 3);
         /* .then(hash => {
           council.password = hash;
         })
