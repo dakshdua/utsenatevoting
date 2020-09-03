@@ -261,7 +261,7 @@ app.post('/end', (req, res) => {
   if(req.payload.user !== 'admin') {
     res.sendStatus(401);
   } else {
-    db.none('UPDATE agenda_items SET council_count=current_council_count, active=FALSE WHERE id IN (SELECT MAX(id) FROM agenda_items)')
+    db.none('SELECT end_item()')
       .then(data => {
         res.sendStatus(200);
       })
