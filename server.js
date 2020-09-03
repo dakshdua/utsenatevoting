@@ -138,7 +138,7 @@ function myAuthorizer(username, password) {
     .then(data => {
       console.log(data);
       if (data) {
-        bcrypt.compare(password, data.password)
+        bcrypt.compare(password.toUpperCase(), data.password)
           .then(result => {
             console.log(result);
             cb(null, result);
@@ -200,7 +200,7 @@ app.post('/adminCouncils', (req, res) => {
     const cs = new pgp.helpers.ColumnSet(['name', 'password'], {table: 'councils'});
     console.log(req.body);
     req.body.forEach(function(council) {
-      council.password = bcrypt.hashSync(council.password, 3);
+      council.password = bcrypt.hashSync(council.password.toUpperCase(), 3);
         /* .then(hash => {
           council.password = hash;
         })
