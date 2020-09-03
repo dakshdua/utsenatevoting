@@ -86,7 +86,7 @@ app.get('/vote', (req, res) => {
             ORDER BY agenda_items.id`)
     .then(data => {
       console.log(data);
-      const [agenda_items_data, councils_data, votes_data] = data;
+      var [agenda_items_data, councils_data, votes_data] = data;
       if (councils_data.length === 0 || agenda_items_data.length === 0) {
         res.sendStatus(409);
       } else {
@@ -125,6 +125,9 @@ app.get('/vote', (req, res) => {
         }
         var tableInfo = new Object();
         tableInfo.agendaItems = agendaItems;
+        for(int i = 0; i < councils_data.length; i++) {
+          councils_data[i] = councils_data[i].name;
+        }
         tableInfo.councils = councils_data;
         res.send(JSON.stringify(tableInfo));
       }
