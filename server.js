@@ -257,7 +257,7 @@ app.post('/agendaItem', (req, res) => {
 });
 
 app.post('/end', (req, res) => {
-  console.log('Path: /agendaItem');
+  console.log('Path: /end');
   if(req.payload.user !== 'admin') {
     res.sendStatus(401);
   } else {
@@ -271,6 +271,91 @@ app.post('/end', (req, res) => {
       });
   }
 });
+
+/* app.post('/export', (req, res) => {
+  console.log('Path: /export');
+  if(req.payload.user !== 'admin') {
+    res.sendStatus(401);
+  } else {
+    db.multi(`SELECT
+                item, type, active
+              FROM
+                agenda_items
+              ORDER BY id;
+
+              SELECT
+                name
+              FROM
+                councils;
+
+              SELECT
+                votes.value AS value,
+                councils.name AS name,
+                agenda_items.item AS item
+              FROM
+                votes
+              INNER JOIN councils ON councils.id = votes.council_id
+              INNER JOIN agenda_items ON agenda_items.id = votes.item_id
+              ORDER BY agenda_items.id`)
+      .then(data => {
+        console.log(data);
+        var [agenda_items_data, councils_data, votes_data] = data;
+        if (councils_data.length === 0 || agenda_items_data.length === 0) {
+          res.sendStatus(409);
+        } else {
+          var agendaItems = [];
+          var currentItem = 0;
+          var currentVote = 0;
+          var item = agenda_items_data[currentItem];
+          while (item) {
+            var agendaItem = new Object();
+            agendaItem.item = item.item;
+            agendaItem.type = item.type;
+            agendaItem.active = item.active;
+            agendaItem.councils = new Object();
+            if (agendaItem.active) {
+              agendaItem.result = 'In Progress';
+              while (currentVote < votes_data.length && votes_data[currentVote].item === item.item) {
+                var vote = votes_data[currentVote];
+                agendaItem.councils[vote.name] = 'Voted';
+                currentVote++;
+              }
+              item = false;
+            } else {
+              agendaItem.Aye = 0;
+              agendaItem.Nay = 0;
+              agendaItem.Abstain = 0;
+              while (currentVote < votes_data.length && votes_data[currentVote].item === item.item) {
+                var vote = votes_data[currentVote];
+                agendaItem[vote.value]++;
+                agendaItem.councils[vote.name] = vote.value;
+                currentVote++;
+              }
+              currentItem++;
+              item = agenda_items_data[currentItem];
+              if (agendaItem.type === 'Bill') {
+                agendaItem.result = agendaItem.Aye > 2 * (agendaItem.Nay + agendaItem.Abstain) ? 'Passed' : 'Failed';
+              } else {
+                agendaItem.result = agendaItem.Aye > (agendaItem.Nay + agendaItem.Abstain)  ? 'Passed' : 'Failed';
+              }
+            }
+            agendaItems.push(agendaItem);
+          }
+          var tableInfo = new Object();
+          tableInfo.agendaItems = agendaItems;
+          for(var i = 0; i < councils_data.length; i++) {
+            councils_data[i] = councils_data[i].name;
+          }
+          tableInfo.councils = councils_data;
+
+        }
+      })
+      .catch(err => {
+        console.log(err);
+        res.sendStatus(500);
+      });
+  }
+}); */
 
 app.post('/vote', (req, res) => {
   console.log('Path: POST /vote');
