@@ -1,5 +1,5 @@
 CREATE TYPE vote_value AS ENUM ('Aye', 'Nay', 'Abstain');
-CREATE TYPE item_type AS ENUM ('Bill', 'Resolution');
+CREATE TYPE item_type AS ENUM ('Bill', 'Resolution', 'Motion');
 
 CREATE TABLE councils (
   id INT GENERATED ALWAYS AS IDENTITY,
